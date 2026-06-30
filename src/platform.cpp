@@ -129,7 +129,8 @@ void blt::platform::GetPlatformInformation(lua_State * L)
 	lua_pushstring(L, "x86-64");
 	lua_setfield(L, -2, "arch");
 
-	lua_pushstring(L, "raid");
+	//lua_pushstring(L, "raid");
+	lua_pushstring(L, "pd2");
 	lua_setfield(L, -2, "game");
 }
 
