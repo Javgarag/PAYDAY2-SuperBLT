@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.18)
 
-project(SuperBLT CXX)
+project(SuperBLT CXX C)
 
 ###############################################################################
 ## misc. definitions ##########################################################
