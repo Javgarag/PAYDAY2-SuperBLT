@@ -113,7 +113,7 @@ void blt::platform::ClosePlatform()
 
 void blt::platform::GetPlatformInformation(lua_State * L)
 {
-	lua_pushstring(L, "mswindows");
+	lua_pushstring(L, "win64");
 	lua_setfield(L, -2, "platform");
 
 	lua_pushstring(L, "x86-64");
