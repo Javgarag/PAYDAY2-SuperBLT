@@ -144,5 +144,3 @@ static void hook_load(try_open_t orig, subhook::Hook& hook, void* this_, void* a
 static void setup_extra_asset_hooks()
 {
 }
-
-#define HOOK_OPTION subhook::HookOptions::HookOption64BitOffset
