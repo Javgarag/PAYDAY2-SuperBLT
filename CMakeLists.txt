@@ -91,6 +91,7 @@ add_library(SuperBLT STATIC ${sources})
 target_compile_options(SuperBLT PRIVATE
 	-DCURL_STATICLIB
 	-DSUBHOOK_STATIC
+	-DWIN32_LEAN_AND_MEAN
 )
 
 # General optimisation breaks calls to certain lua functions, so replace it.

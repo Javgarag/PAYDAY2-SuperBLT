@@ -4,9 +4,8 @@
 #include "platform.h"
 #include "subhook.h"
 
-#define WIN32_LEAN_AND_MEAN
-#include <synchapi.h>
 #include <windows.h>
+#include <synchapi.h>
 
 using raidhook::tweaker::dbhook::hook_asset_load;
 
