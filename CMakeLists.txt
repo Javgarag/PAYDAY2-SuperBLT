@@ -293,6 +293,12 @@ target_link_libraries(DieselEngineFormats PRIVATE zlib-ng)
 target_link_libraries(SuperBLT DieselEngineFormats)
 
 
+#### diesel-wwise-bnk-version-converter ####
+
+file(GLOB_RECURSE wwise_converter_sources lib/diesel-wwise-bnk-version-converter/DieselWwiseSoundbank/src/*.cpp)
+add_library(diesel-wwise-bnk-version-converter STATIC ${wwise_converter_sources})
+target_include_directories(diesel-wwise-bnk-version-converter PUBLIC lib/diesel-wwise-bnk-version-converter/DieselWwiseSoundbank/src)
+target_link_libraries(SuperBLT diesel-wwise-bnk-version-converter)
 
 ###############################################################################
 ## loader binary (this generates a seperate target for both Windows loaders) ##

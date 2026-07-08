@@ -3,6 +3,7 @@
 
 #include "dbutil/Archive.h"
 #include "platform.h"
+#include "soundbank.h"
 #include "subhook.h"
 #include "util/util.h"
 
@@ -84,8 +85,7 @@ static void hook_load(try_open_t orig, subhook::Hook& hook, void* this_, Archive
 
 	// Read the probably_not_loaded_flag to see if this archive failed to load - if so try again but also
 	// look for hooks with the fallback bit set
-	bool probably_not_loaded_flag = *(bool*)((char*)archive + 0x38);
-	if (probably_not_loaded_flag)
+	if (archive->probablyNotLoadedFlag)
 	{
 		if (hook_asset_load(blt::idfile(*name, *type), &datastore, &pos, &len, ds_name, true))
 		{
@@ -123,6 +123,32 @@ static void hook_load(try_open_t orig, subhook::Hook& hook, void* this_, Archive
 		// char msg[100];
 		// snprintf(msg, sizeof(msg), "Loading %016llx.%016llx\n", *name, *type);
 		// RAIDHOOK_LOG_LOG(msg);
+	}
+	else if (*type == blt::idstring_hash("bnk"))
+	{
+		uint8_t version; // Actually an uint32_t, but the version will fit in a byte
+		archive->datastore->read(8, &version, 1);
+
+		// Soundbank is already updated
+		if ((Wwise::BankVersion)version != Wwise::BankVersion::V2013)
+			return;
+
+		archive->datastore = new BLTFormatConversionDataStore([](std::vector<uint8_t>&& data) { 
+			std::string buffer(reinterpret_cast<const char*>(data.data()), data.size());
+			std::istringstream stream(buffer, std::ios::binary);
+
+			Wwise::Soundbank bnk(stream);
+
+			std::ostringstream out(std::ios::binary);
+			bnk.Convert(Wwise::BankVersion::V2022, out);
+			std::string bytes = out.str();
+			data.assign(bytes.begin(), bytes.end());
+
+			return std::move(data);
+		}, archive->datastore, archive->datastoreRefCountId);
+
+		Archive::Constructor(archive, ds_name, archive->datastore, archive->position, archive->datastore->size(),
+		                     false);
 	}
 }
 
