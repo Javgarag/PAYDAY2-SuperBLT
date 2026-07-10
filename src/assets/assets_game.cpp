@@ -134,16 +134,8 @@ static void hook_load(try_open_t orig, subhook::Hook& hook, void* this_, Archive
 			return;
 
 		archive->datastore = new BLTFormatConversionDataStore([](std::vector<uint8_t>&& data) { 
-			std::string buffer(reinterpret_cast<const char*>(data.data()), data.size());
-			std::istringstream stream(buffer, std::ios::binary);
-
-			Wwise::Soundbank bnk(stream);
-
-			std::ostringstream out(std::ios::binary);
-			bnk.Convert(Wwise::BankVersion::V2022, out);
-			std::string bytes = out.str();
-			data.assign(bytes.begin(), bytes.end());
-
+			Wwise::Soundbank bnk(data.data(), data.size());
+			bnk.Convert(Wwise::BankVersion::V2022, data);
 			return std::move(data);
 		}, archive->datastore, archive->datastoreRefCountId);
 
