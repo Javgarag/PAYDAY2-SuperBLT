@@ -34,8 +34,8 @@ DECLARE_PASSTHROUGH(try_open_property_match_resolver)
 static subhook::Hook WwDevice_loadBankIdstringDetour;
 static subhook::Hook WwDevice_idToEntryDetour;
 
-static subhook::Hook CAkSrcFileBase_StartStreamDetour;
-std::unordered_set<uint32_t> overridenStreams, playedPrefetchStreams;
+static subhook::Hook CAkSrcFileBase_CreateStreamDetour;
+std::unordered_set<uint32_t> overridenStreams;
 
 // Access happens on two different threads
 std::mutex customWwiseMapsMutex;
@@ -112,9 +112,9 @@ idstr* sound_WwDevice__id_to_entry_h(sound_WwDevice* this_, idstr* result, unsig
 	return result;
 }
 
-void* CAkSrcFileBase_StartStream_h(void* this_, void* in_bufSettings)
+int CAkSrcFileBase_CreateStream_h(void* this_, void* in_bufSettings, char in_uMinNumBuffers)
 {
-	subhook::ScopedHookRemove scoped_remove(&CAkSrcFileBase_StartStreamDetour);
+	subhook::ScopedHookRemove scoped_remove(&CAkSrcFileBase_CreateStreamDetour);
 
 	void* m_pCtx = *(void**)((char*)this_ + 24);
 	void* m_pSource = *(void**)((char*)m_pCtx + 672);
@@ -129,23 +129,12 @@ void* CAkSrcFileBase_StartStream_h(void* this_, void* in_bufSettings)
 	// }
 	AkMediaInformation* mediaInfo = (AkMediaInformation*)((char*)m_pSource);
 
-	// Javgarag: we need a playedStreams set so that we get a chance of adding the file to overridenStreams (it loads after this call) and so that we don't crash the first time for not disabling the prefetch
-	// disabling prefetch at least once, even for vanilla streams, is inevitable for our purposes
-	if (mediaInfo->bPrefetch) 
+	int ret = CAkSrcFileBase__CreateStream(this_, in_bufSettings, in_uMinNumBuffers);
+
+	if (mediaInfo->bPrefetch && overridenStreams.contains(mediaInfo->sourceID))
 	{
-		if (!playedPrefetchStreams.contains(mediaInfo->sourceID) || overridenStreams.contains(mediaInfo->sourceID))
-		{
-			mediaInfo->bPrefetch = false;
-
-			if (!playedPrefetchStreams.contains(mediaInfo->sourceID))
-				playedPrefetchStreams.insert(mediaInfo->sourceID);
-		}	
+		mediaInfo->bPrefetch = false;
 	}
-
-	auto ret = CAkSrcFileBase__StartStream(this_, in_bufSettings);
-
-	if (!overridenStreams.contains(mediaInfo->sourceID) && playedPrefetchStreams.contains(mediaInfo->sourceID))
-		mediaInfo->bPrefetch = true;
 	
 	return ret;
 }
@@ -171,7 +160,7 @@ void blt::win32::InitAssets()
 	WwDevice_loadBankIdstringDetour.Install(sound_WwDevice__load_bank_idstring, &sound_WwDevice__load_bank_idstring_h, HOOK_FLAG);
 	WwDevice_idToEntryDetour.Install(sound_WwDevice__id_to_entry, &sound_WwDevice__id_to_entry_h, HOOK_FLAG);
 
-	CAkSrcFileBase_StartStreamDetour.Install(CAkSrcFileBase__StartStream, &CAkSrcFileBase_StartStream_h, HOOK_FLAG);
+	CAkSrcFileBase_CreateStreamDetour.Install(CAkSrcFileBase__CreateStream, &CAkSrcFileBase_CreateStream_h, HOOK_FLAG);
 }
 
 
