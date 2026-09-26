@@ -4,6 +4,7 @@
 #include <ctime>
 #include <fstream>
 #include <iostream>
+#include <filesystem>
 
 #include <mutex>
 
@@ -31,7 +32,7 @@ namespace raidhook
 				localtime_r(&currentTime, &now);
 
 				char datestring[100];
-				std::strftime(datestring, sizeof(datestring), "%I:%M:%S %p", &now);
+				std::strftime(datestring, sizeof(datestring), "%H:%M:%S", &now);
 
 				os << datestring << ' ';
 				return os;
@@ -191,18 +192,18 @@ namespace raidhook
 
 		LogWriter::LogWriter(LogType msgType)
 		{
-			*this << LogTime << msgType << ' ';
+			*this << LogTime << msgType;
 		}
 
 		LogWriter::LogWriter(const char* file, int line, LogType msgType)
 		{
 			if (line && line > 0)
 			{
-				*this << LogTime << msgType << " (" << file << ':' << line << ") ";
+				*this << LogTime << msgType << "(" << std::filesystem::path(file).filename().string() << ':' << line << ") ";
 			}
 			else if (file)
 			{
-				*this << LogTime << msgType << " (" << file << ") ";
+				*this << LogTime << msgType << "(" << std::filesystem::path(file).filename().string() << ") ";
 			}
 			else
 			{
